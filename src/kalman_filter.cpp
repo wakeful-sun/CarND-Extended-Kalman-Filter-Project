@@ -20,7 +20,7 @@ void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
 
 void KalmanFilter::Predict()
 {
-  x_ = F_ * x_; /*+ u;*/
+  x_ = F_ * x_;
   MatrixXd F_transposed = F_.transpose();
   P_ = F_ * P_ * F_transposed + Q_;
 }
@@ -39,10 +39,21 @@ void KalmanFilter::Update(const VectorXd &z)
   P_ = (I - KalmanGain * H_) * P_;
 }
 
-void KalmanFilter::UpdateEKF(const VectorXd &z)
+void KalmanFilter::UpdateEKF(const VectorXd &z) 
 {
+  //VectorXd y = z - tools.MapCartesianToPolar(z);
+  //MatrixXd Hj = tools.CalculateJacobian(z);
+  //MatrixXd Hj_transposed = Hj.transpose();
+  //MatrixXd S = Hj * P_ * Hj_transposed + R_;
+  //MatrixXd S_inversed = S.inverse();
+  //MatrixXd KalmanGain = P_ * Hj_transposed * S_inversed;
+
+  //x_ = x_ + (KalmanGain * y);
+  //long x_size = x_.size();
+  //MatrixXd I = MatrixXd::Identity(x_size, x_size);
+  //P_ = (I - KalmanGain * H_) * P_;
   /**
   TODO:
-    * update the state by using Extended Kalman Filter equations
+    * write some tests
   */
 }

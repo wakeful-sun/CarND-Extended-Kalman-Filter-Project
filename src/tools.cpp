@@ -18,7 +18,7 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
 
   if (estimations_size != ground_truth.size() || estimations_size == 0)
   {
-    cout << "Invalid estimation or ground_truth data" << endl;
+    std::cout << "Invalid estimation or ground_truth data" << std::endl;
     return rmse;
   }
 
@@ -69,4 +69,25 @@ MatrixXd Tools::CalculateJacobian(const VectorXd &x_state)
       H_20, H_21, H_00, H_01;
 
   return Hj;
+}
+
+VectorXd MapCartesianToPolar(const VectorXd &x_state)
+{
+  float px = x_state(0);
+  float py = x_state(1);
+  float vx = x_state(2);
+  float vy = x_state(3);  
+  
+  if (px == 0 && py == 0)
+  {
+    throw std::invalid_argument("received zero state values");
+  }
+
+  float range = sqrt(px * px + py * py);
+  float bearing_radians = atan(py/px); //TODO: normalize: add or subtract 2π from ϕ until it is between −π and π.
+  float range_rate = (px * vx + py * vy) / range;
+
+  VectorXd h;
+  h << range, bearing_radians, range_rate;
+  return h;
 }
