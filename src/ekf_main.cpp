@@ -2,7 +2,10 @@
 #include "FusionEKF.h"
 #include "tools.h"
 
-using namespace std;
+using std::vector;
+using std::string;
+using std::ifstream;
+using std::istringstream;
 
 int main() {
 
@@ -16,7 +19,7 @@ int main() {
 	ifstream in_file(in_file_name_.c_str(), std::ifstream::in);
 
 	if (!in_file.is_open()) {
-		cout << "Cannot open input file: " << in_file_name_ << endl;
+		std::cout << "Cannot open input file: " << in_file_name_ << std::endl;
 	}
 
 	string line;

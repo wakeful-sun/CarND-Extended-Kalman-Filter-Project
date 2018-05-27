@@ -3,57 +3,70 @@
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
-KalmanFilter::KalmanFilter() {}
-
-KalmanFilter::~KalmanFilter() {}
-
-void KalmanFilter::Init(VectorXd &x_in, MatrixXd &P_in, MatrixXd &F_in,
-                        MatrixXd &H_in, MatrixXd &R_in, MatrixXd &Q_in)
+void KalmanFilter::UpdateStateTransition(const double& time_shift)
 {
-  x_ = x_in;
-  P_ = P_in;
-  F_ = F_in;
-  H_ = H_in;
-  R_ = R_in;
-  Q_ = Q_in;
+  F(0, 2) = time_shift;
+  F(1, 3) = time_shift;
 }
 
-void KalmanFilter::Predict()
+void KalmanFilter::UpdateProcessNoise(const double& time_shift)
 {
-  x_ = F_ * x_;
-  MatrixXd F_transposed = F_.transpose();
-  P_ = F_ * P_ * F_transposed + Q_;
+	double time_shift_2 = time_shift * time_shift;
+	double time_shift_3 = time_shift_2 * time_shift;
+	double time_shift_4 = time_shift_3 * time_shift;
+
+	Q << time_shift_4 / 4 * noise_ax, 0, time_shift_3 / 2 * noise_ax, 0,
+	  0, time_shift_4 / 4 * noise_ay, 0, time_shift_3 / 2 * noise_ay,
+	  time_shift_3 / 2 * noise_ax, 0, time_shift_2 * noise_ax, 0,
+	  0, time_shift_3 / 2 * noise_ay, 0, time_shift_2 * noise_ay;
+
 }
 
-void KalmanFilter::Update(const VectorXd &z)
+KalmanFilter::KalmanFilter()
+  :
+  noise_ax(9), noise_ay(9),
+  x(VectorXd(4)),
+  F(MatrixXd(4, 4)), P(MatrixXd(4, 4)), Q(MatrixXd(4, 4))
 {
-  VectorXd y = z - H_ * x_;
-  MatrixXd H_transposed = H_.transpose();
-  MatrixXd S = H_ * P_ * H_transposed + R_;
+  // initial state transition matrix
+  F << 1, 0, 0, 0,
+	  0, 1, 0, 0,
+	  0, 0, 1, 0,
+	  0, 0, 0, 1;
+  
+  // initial uncertainty
+  P << 1, 0, 0, 0,
+	  0, 1, 0, 0,
+	  0, 0, 1000, 0,
+	  0, 0, 0, 1000;
+}
+
+void KalmanFilter::Initialize(double x_coordinate, double y_coordinate)
+{
+	x << x_coordinate, y_coordinate, 0, 0;
+}
+
+void KalmanFilter::Predict(const double time_shift)
+{
+  UpdateStateTransition(time_shift);
+  UpdateProcessNoise(time_shift);
+  
+  x = F * x;
+  MatrixXd F_transposed = F.transpose();
+  P = F * P * F_transposed + Q;
+}
+
+void KalmanFilter::Update(const VectorXd &z, const MatrixXd &H, const MatrixXd &R)
+{
+  VectorXd z_predicted = H * x;
+  VectorXd y = z - z_predicted;
+  MatrixXd H_transposed = H.transpose();
+  MatrixXd S = H * P * H_transposed + R;
   MatrixXd S_inversed = S.inverse();
-  MatrixXd KalmanGain = P_ * H_transposed * S_inversed;
+  MatrixXd KalmanGain = P * H_transposed * S_inversed;
 
-  x_ = x_ + (KalmanGain * y);
-  long x_size = x_.size();
+  x = x + KalmanGain * y;
+  long x_size = x.size();
   MatrixXd I = MatrixXd::Identity(x_size, x_size);
-  P_ = (I - KalmanGain * H_) * P_;
-}
-
-void KalmanFilter::UpdateEKF(const VectorXd &z) 
-{
-  //VectorXd y = z - tools.MapCartesianToPolar(z);
-  //MatrixXd Hj = tools.CalculateJacobian(z);
-  //MatrixXd Hj_transposed = Hj.transpose();
-  //MatrixXd S = Hj * P_ * Hj_transposed + R_;
-  //MatrixXd S_inversed = S.inverse();
-  //MatrixXd KalmanGain = P_ * Hj_transposed * S_inversed;
-
-  //x_ = x_ + (KalmanGain * y);
-  //long x_size = x_.size();
-  //MatrixXd I = MatrixXd::Identity(x_size, x_size);
-  //P_ = (I - KalmanGain * H_) * P_;
-  /**
-  TODO:
-    * write some tests
-  */
+  P = (I - KalmanGain * H) * P;
 }

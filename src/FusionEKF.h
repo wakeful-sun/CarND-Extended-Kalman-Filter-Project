@@ -12,7 +12,6 @@
 class FusionEKF {
 public:
   FusionEKF();
-  virtual ~FusionEKF();
   
   void ProcessMeasurement(const MeasurementPackage &measurement_pack);
   KalmanFilter ekf_;
