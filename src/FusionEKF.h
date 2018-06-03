@@ -2,8 +2,9 @@
 #define FusionEKF_H_
 
 #include "measurement_package.h"
-#include "sensor.h"
 #include "kalman_filter.h"
+#include "radar_sensor.h"
+#include "lidar_sensor.h"
 
 class FusionEKF {
 public:

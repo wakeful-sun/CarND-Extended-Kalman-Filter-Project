@@ -28,7 +28,7 @@ int main() {
 	string line;
 	// set i to get only first 3 measurments
 	int i = 0;
-	while (getline(in_file, line) && (i <= 3)) {
+	while (getline(in_file, line) && (i <= 300)) {
 
 		MeasurementPackage meas_package;
 
@@ -61,6 +61,7 @@ int main() {
 			meas_package.raw_measurements_ << ro, theta, ro_dot;
 			iss >> timestamp;
 			meas_package.timestamp_ = timestamp;
+			measurement_pack_list.push_back(meas_package);
 		}
 		i++;
 

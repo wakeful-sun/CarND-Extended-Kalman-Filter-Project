@@ -11,39 +11,37 @@ void KalmanFilter::UpdateStateTransition(const float& time_shift)
 
 void KalmanFilter::UpdateProcessNoise(const float& time_shift)
 {
-	float time_shift_2 = time_shift * time_shift;
-	float time_shift_3 = time_shift_2 * time_shift;
-	float time_shift_4 = time_shift_3 * time_shift;
-
-	Q << time_shift_4 / 4 * noise_ax, 0, time_shift_3 / 2 * noise_ax, 0,
-	  0, time_shift_4 / 4 * noise_ay, 0, time_shift_3 / 2 * noise_ay,
-	  time_shift_3 / 2 * noise_ax, 0, time_shift_2 * noise_ax, 0,
-	  0, time_shift_3 / 2 * noise_ay, 0, time_shift_2 * noise_ay;
-
+  float time_shift_2 = time_shift * time_shift;
+  float time_shift_3 = time_shift_2 * time_shift;
+  float time_shift_4 = time_shift_3 * time_shift;
+  
+  Q << time_shift_4 / 4 * noise_ax, 0, time_shift_3 / 2 * noise_ax, 0,
+    0, time_shift_4 / 4 * noise_ay, 0, time_shift_3 / 2 * noise_ay,
+    time_shift_3 / 2 * noise_ax, 0, time_shift_2 * noise_ax, 0,
+    0, time_shift_3 / 2 * noise_ay, 0, time_shift_2 * noise_ay;  
 }
 
 KalmanFilter::KalmanFilter()
-  :
-  noise_ax(9), noise_ay(9),
+  : noise_ax(9), noise_ay(9),
   F(MatrixXd(4, 4)),
   Q(MatrixXd(4, 4)), x(VectorXd(4)), P(MatrixXd(4, 4))
 {
   // initial state transition matrix
   F << 1, 0, 0, 0,
-	  0, 1, 0, 0,
-	  0, 0, 1, 0,
-	  0, 0, 0, 1;
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1;
   
   // initial uncertainty
   P << 1, 0, 0, 0,
-	  0, 1, 0, 0,
-	  0, 0, 1000, 0,
-	  0, 0, 0, 1000;
+    0, 1, 0, 0,
+    0, 0, 1000, 0,
+    0, 0, 0, 1000;
 }
 
 void KalmanFilter::Initialize(float x_coordinate, float y_coordinate)
 {
-	x << x_coordinate, y_coordinate, 0, 0;
+  x << x_coordinate, y_coordinate, 0, 0;
 }
 
 VectorXd KalmanFilter::Predict(const float& time_shift)
@@ -60,17 +58,17 @@ VectorXd KalmanFilter::Predict(const float& time_shift)
 
 MatrixXd KalmanFilter::Update(const VectorXd& measurement, Sensor& sensor)
 {
-	sensor.Update(x, measurement);
-
-	MatrixXd H_transposed = sensor.H.transpose();
-	MatrixXd S = sensor.H * P * H_transposed + sensor.R;
-	MatrixXd S_inversed = S.inverse();
-	MatrixXd K = P * H_transposed * S_inversed;
-
-	x = x + K * sensor.prediction_error;
-	long x_size = x.size();
-	MatrixXd I = MatrixXd::Identity(x_size, x_size);
-	P = (I - K * sensor.H) * P;
-
-	return P;
+  sensor.Update(x, measurement);
+  
+  MatrixXd H_transposed = sensor.H.transpose();
+  MatrixXd S = sensor.H * P * H_transposed + sensor.R;
+  MatrixXd S_inversed = S.inverse();
+  MatrixXd K = P * H_transposed * S_inversed;
+  
+  x = x + K * sensor.prediction_error;
+  long x_size = x.size();
+  MatrixXd I = MatrixXd::Identity(x_size, x_size);
+  P = (I - K * sensor.H) * P;
+  
+  return P;
 }

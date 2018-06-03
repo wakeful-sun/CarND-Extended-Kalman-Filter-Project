@@ -1,4 +1,5 @@
 #include "sensor.h"
+#include "lidar_sensor.h"
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
