@@ -1,85 +1,79 @@
 #include "FusionEKF.h"
-#include "tools.h"
+#include "sensor.h"
 #include "Eigen/Dense"
 #include <iostream>
 #include <math.h>
 
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-using std::vector; // used for error calculation
 
 FusionEKF::FusionEKF()
+	: is_initialized_(false), previous_timestamp_(0),
+	radar_sensor(RadarSensor()), lidar_sensor(LidarSensor())
 {
-  is_initialized_ = false;
-  previous_timestamp_ = 0;
+}
 
-  // measuremet noise covariance
-  R_laser_ = MatrixXd(2, 2);
-  R_laser_ << 0.0225, 0,
-      0, 0.0225;
+void FusionEKF::Initialize(const MeasurementPackage& measurement_pack)
+{
+	std::cout << "EKF: " << std::endl;
+	previous_timestamp_ = measurement_pack.timestamp_;
 
-  R_radar_ = MatrixXd(3, 3);
-  R_radar_ << 0.09, 0, 0,
-      0, 0.0009, 0,
-      0, 0, 0.09;
+	switch (measurement_pack.sensor_type_)
+	{
+	case MeasurementPackage::RADAR:
+	{
+		float x = measurement_pack.raw_measurements_[0] * cos(measurement_pack.raw_measurements_[1]);
+		float y = measurement_pack.raw_measurements_[0] * sin(measurement_pack.raw_measurements_[1]);
+		ekf_.Initialize(x, y);
+	}
+	break;
+	case MeasurementPackage::LASER:
+		ekf_.Initialize(measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1]);
+		break;
+	default:
+		throw "Given sensor type in not supported: " + measurement_pack.sensor_type_;
+	}
 
-  H_laser_ = MatrixXd(2, 4);
-  Hj_ = MatrixXd(3, 4);
+	// done initializing, no need to predict or update
+	is_initialized_ = true;
 }
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
 {
-  if (!is_initialized_)
-  {    
-    std::cout << "EKF: " << std::endl;
+	if (!is_initialized_)
+	{
+		Initialize(measurement_pack);
+		return;
+	}
+
+	/*****************************************************************************
+	 *  Prediction
+	 ****************************************************************************/
+
+	float time_shift = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
+	VectorXd prediction = ekf_.Predict(time_shift);
+
+	/*****************************************************************************
+	 *  Update
+	 ****************************************************************************/
+
+	MatrixXd uncertainty;
+
+	switch (measurement_pack.sensor_type_)
+	{
+	case MeasurementPackage::RADAR:
+		uncertainty = ekf_.Update(measurement_pack.raw_measurements_, radar_sensor);
+		break;
+	case MeasurementPackage::LASER:
+		uncertainty = ekf_.Update(measurement_pack.raw_measurements_, lidar_sensor);
+		break;
+	default:
+		throw "Given sensor type in not supported: " + measurement_pack.sensor_type_;
+	}
+
 	previous_timestamp_ = measurement_pack.timestamp_;
 
-    if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR)
-    {
-	  double x = measurement_pack.raw_measurements_[0] * cos(measurement_pack.raw_measurements_[1]);
-	  double y = measurement_pack.raw_measurements_[0] * sin(measurement_pack.raw_measurements_[1]);
-	  
-      ekf_.Initialize(x, y);
-	}
-    else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER)
-    {
-	  ekf_.Initialize(measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1]);
-    }
-    
-  	// done initializing, no need to predict or update
-    is_initialized_ = true;
-    return;
-  }
-
-  /*****************************************************************************
-   *  Prediction
-   ****************************************************************************/
-
-  double dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
-  ekf_.Predict(dt);
-
-  /*****************************************************************************
-   *  Update
-   ****************************************************************************/
-
-  /**
-   TODO:
-     * Use the sensor type to perform the update step.
-     * Update the state and covariance matrices.
-   */
-
-  if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR)
-  {
-	  //TODO: calculate H matrices
-	ekf_.Update(measurement_pack.raw_measurements_, Hj_, R_radar_);
-  }
-  else
-  {
-	ekf_.Update(measurement_pack.raw_measurements_, H_laser_, R_laser_);
-  }
-
-  previous_timestamp_ = measurement_pack.timestamp_;
-  // print the output
-  std::cout << "x = " << ekf_.x << std::endl;
-  std::cout << "P = " << ekf_.P << std::endl;
+	// print the output
+	std::cout << "x = " << prediction << std::endl;
+	std::cout << "P = " << uncertainty << std::endl;
 }

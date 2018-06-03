@@ -2,29 +2,23 @@
 #define FusionEKF_H_
 
 #include "measurement_package.h"
-#include "Eigen/Dense"
-#include <vector>
-#include <string>
-#include <fstream>
+#include "sensor.h"
 #include "kalman_filter.h"
-#include "tools.h"
 
 class FusionEKF {
 public:
   FusionEKF();
-  
   void ProcessMeasurement(const MeasurementPackage &measurement_pack);
-  KalmanFilter ekf_;
 
 private:
   bool is_initialized_;
   long long previous_timestamp_;
 
-  Tools tools;
-  Eigen::MatrixXd R_laser_;
-  Eigen::MatrixXd R_radar_;
-  Eigen::MatrixXd H_laser_;
-  Eigen::MatrixXd Hj_;
+  KalmanFilter ekf_;
+  RadarSensor radar_sensor;
+  LidarSensor lidar_sensor;
+	
+  void Initialize(const MeasurementPackage& measurement_pack);
 };
 
 #endif /* FusionEKF_H_ */

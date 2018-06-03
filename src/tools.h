@@ -3,16 +3,13 @@
 #include <vector>
 #include "Eigen/Dense"
 
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
-
 class Tools {
 public:
   Tools();
 
-  VectorXd CalculateRMSE(const std::vector<VectorXd> &estimations, const std::vector<VectorXd> &ground_truth);
-  MatrixXd CalculateJacobian(const VectorXd& x_state);
-  VectorXd MapCartesianToPolar(const VectorXd& x_state);
+  Eigen::VectorXd CalculateRMSE(const std::vector<Eigen::VectorXd> &estimations, const std::vector<Eigen::VectorXd> &ground_truth);
+  Eigen::MatrixXd CalculateJacobian(const Eigen::VectorXd& x_state);
+  Eigen::VectorXd MapCartesianToPolar(const Eigen::VectorXd& x_state);
 };
 
 #endif /* TOOLS_H_ */

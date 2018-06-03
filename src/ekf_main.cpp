@@ -1,11 +1,14 @@
 #include <iostream>
 #include "FusionEKF.h"
-#include "tools.h"
+#include <vector>
+#include <string>
+#include <fstream>
 
 using std::vector;
 using std::string;
 using std::ifstream;
 using std::istringstream;
+using Eigen::VectorXd;
 
 int main() {
 
@@ -15,7 +18,7 @@ int main() {
 	vector<MeasurementPackage> measurement_pack_list;
 
 	// hardcoded input file with laser and radar measurements
-	string in_file_name_ = "EKF_DATA/obj_pose-laser-radar-synthetic-input.txt";
+	string in_file_name_ = "../data/obj_pose-laser-radar-synthetic-input.txt";
 	ifstream in_file(in_file_name_.c_str(), std::ifstream::in);
 
 	if (!in_file.is_open()) {
