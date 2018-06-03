@@ -9,7 +9,7 @@
 class FusionEKF {
 public:
   FusionEKF();
-  void ProcessMeasurement(const MeasurementPackage &measurement_pack);
+  Eigen::VectorXd ProcessMeasurement(const MeasurementPackage &measurement_pack);
 
 private:
   bool is_initialized_;

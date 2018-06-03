@@ -23,7 +23,8 @@
         "string_view": "cpp",
         "unordered_set": "cpp",
         "utility": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "core": "cpp"
     },
     "clang.cflags": [],
     "clang.cxxflags": [

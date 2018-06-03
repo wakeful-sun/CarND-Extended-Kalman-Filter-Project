@@ -25,6 +25,7 @@ public:
    * @param y_coordinate initial x coordinate of tracking target position
    */
   void Initialize(float x_coordinate, float y_coordinate);
+  
   /**
   * Predicts the state and the state covariance
   * using the process model
@@ -37,7 +38,8 @@ public:
   * @param measurement The measurement at k+1
   * @param sensor
   */
-  Eigen::MatrixXd Update(const Eigen::VectorXd& measurement, Sensor& sensor);  
+  Eigen::MatrixXd Update(const Eigen::VectorXd& measurement, Sensor& sensor);
+  
 };
 
 #endif /* KALMAN_FILTER_H_ */
