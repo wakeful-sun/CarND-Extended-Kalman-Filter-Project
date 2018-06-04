@@ -1,10 +1,11 @@
 #include "sensor.h"
 #include "radar_sensor.h"
+#include <math.h>
 
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 
-void RadarSensor::UpdateMeasurementMatrix()
+void RadarSensor::UpdateMeasurementMatrix(const float& range, const float& range_2)
 {
   float range_3 = range_2 * range;
   
@@ -24,7 +25,7 @@ void RadarSensor::UpdateMeasurementMatrix()
 
 RadarSensor::RadarSensor()
   : Sensor(MatrixXd(3, 4), MatrixXd(3, 3)),
-  px(0), py(0), vx(0), vy(0), range(0), range_2(0), radar_prediction(VectorXd(3))
+  px(0), py(0), vx(0), vy(0)
 {
   H << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -33,26 +34,28 @@ RadarSensor::RadarSensor()
   R << 0.09, 0, 0,
     0, 0.0009, 0,
     0, 0, 0.09;
+
+  prediction_error = VectorXd(3);
 }
 
-void RadarSensor::Update(const VectorXd& prediction, const VectorXd& measurement)
+void RadarSensor::Update(const VectorXd& prediction, const VectorXd& m)
 {
   px = prediction(0);
   py = prediction(1);
   vx = prediction(2);
   vy = prediction(3);
-  
+
   if (px == 0 && py == 0)
   {
-    throw std::invalid_argument("received zero state values");
+    throw std::invalid_argument("You hit an obstacle!!!");
   }
+
+  float range_2 = px * px + py * py;
   
-  range_2 = px * px + py * py;
-  range = sqrt(range_2);
-  float bearing = atan(py / px);
+  float range = sqrt(range_2);
+  float bearing = atan2(py, px);
   float radial_velocity = (px * vx + py * vy) / range;
   
-  radar_prediction << range, bearing, radial_velocity;
-  prediction_error = measurement - radar_prediction;
-  UpdateMeasurementMatrix();
+  prediction_error << m(0) - range, m(1) - bearing, m(2) - radial_velocity;
+  UpdateMeasurementMatrix(range, range_2);
 }

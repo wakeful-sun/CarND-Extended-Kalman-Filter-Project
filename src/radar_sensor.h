@@ -9,11 +9,8 @@ private:
   float py;
   float vx;
   float vy;
-  float range;
-  float range_2;
-  Eigen::VectorXd radar_prediction;
   
-  void UpdateMeasurementMatrix();
+  void UpdateMeasurementMatrix(const float& range, const float& range_2);
 public:
   RadarSensor();  
   void Update(const Eigen::VectorXd& prediction, const Eigen::VectorXd& measurement) override;
