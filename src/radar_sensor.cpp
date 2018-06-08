@@ -5,6 +5,20 @@
 using Eigen::VectorXd;
 using Eigen::MatrixXd;
 
+void RadarSensor::NormalizeBearing(float &bearing_error)
+{
+  if(bearing_error < -M_PI)
+  {
+    bearing_error = bearing_error + m_2PI;
+    NormalizeBearing(bearing_error);
+  }
+  if(bearing_error > M_PI)
+  {
+    bearing_error = bearing_error - m_2PI;
+    NormalizeBearing(bearing_error);
+  }
+}
+
 void RadarSensor::UpdateMeasurementMatrix(const float& range, const float& range_2)
 {
   float range_3 = range_2 * range;
@@ -25,7 +39,7 @@ void RadarSensor::UpdateMeasurementMatrix(const float& range, const float& range
 
 RadarSensor::RadarSensor()
   : Sensor(MatrixXd(3, 4), MatrixXd(3, 3)),
-  px(0), py(0), vx(0), vy(0)
+  px(0), py(0), vx(0), vy(0), m_2PI(M_PI * 2)
 {
   H << 1, 0, 0, 0,
     0, 1, 0, 0,
@@ -55,7 +69,9 @@ void RadarSensor::Update(const VectorXd& prediction, const VectorXd& m)
   float range = sqrt(range_2);
   float bearing = atan2(py, px);
   float radial_velocity = (px * vx + py * vy) / range;
+  float bearing_error = m(1) - bearing;
+  NormalizeBearing(bearing_error);
   
-  prediction_error << m(0) - range, m(1) - bearing, m(2) - radial_velocity;
+  prediction_error << m(0) - range, bearing_error, m(2) - radial_velocity;
   UpdateMeasurementMatrix(range, range_2);
 }

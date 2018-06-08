@@ -10,6 +10,9 @@ private:
   float vx;
   float vy;
   
+  float m_2PI;
+
+  void NormalizeBearing(float& bearing_error);
   void UpdateMeasurementMatrix(const float& range, const float& range_2);
 public:
   RadarSensor();  
