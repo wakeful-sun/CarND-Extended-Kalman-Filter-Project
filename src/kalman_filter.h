@@ -10,13 +10,13 @@ private:
   int noise_ay;
   Eigen::MatrixXd F;
   Eigen::MatrixXd Q;
+  Eigen::VectorXd x;
+  Eigen::MatrixXd P;
+	Eigen::MatrixXd I;
+
   void UpdateStateTransition(const float &time_shift);
   void UpdateProcessNoise(const float &time_shift);
 
-  Eigen::VectorXd x;
-  Eigen::MatrixXd P;
-	
-  Tools tools;
 public:
   KalmanFilter();
   /**
@@ -31,14 +31,14 @@ public:
   * using the process model
   * @param time_shift Time between k and k+1 in s
   */
-  Eigen::VectorXd Predict(const float& time_shift);
+  Eigen::VectorXd Predict(const float time_shift);
 
   /**
   * Updates the state by using Extended Kalman Filter equations
   * @param measurement The measurement at k+1
   * @param sensor
   */
-  Eigen::MatrixXd Update(const Eigen::VectorXd& measurement, Sensor& sensor);
+  void Update(const Eigen::VectorXd& measurement, Sensor& sensor);
   
 };
 

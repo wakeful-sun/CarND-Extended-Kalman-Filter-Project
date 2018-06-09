@@ -18,7 +18,6 @@ FusionEKF::FusionEKF()
 
 void FusionEKF::Initialize(const MeasurementPackage& measurement_pack)
 {
-  std::cout << "EKF: " << std::endl;
   previous_timestamp_ = measurement_pack.timestamp_;
   
   switch (measurement_pack.sensor_type_)
@@ -36,8 +35,6 @@ void FusionEKF::Initialize(const MeasurementPackage& measurement_pack)
     default:
       throw "Given sensor type in not supported.";
   }
-  
-  // done initializing, no need to predict or update
 }
 
 VectorXd FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack)
@@ -62,25 +59,19 @@ VectorXd FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pac
    *  Update
    ****************************************************************************/
   
-  MatrixXd uncertainty;
-  
   switch (measurement_pack.sensor_type_)
   {
     case MeasurementPackage::RADAR:
-      uncertainty = ekf_.Update(measurement_pack.raw_measurements_, radar_sensor);
+      ekf_.Update(measurement_pack.raw_measurements_, radar_sensor);
       break;
     case MeasurementPackage::LASER:
-      uncertainty = ekf_.Update(measurement_pack.raw_measurements_, lidar_sensor);
+      ekf_.Update(measurement_pack.raw_measurements_, lidar_sensor);
       break;
     default:
       throw "Given sensor type in not supported.";
   }
 
   previous_timestamp_ = measurement_pack.timestamp_;
-  
-  // print the output
-  std::cout << "x = " << prediction << std::endl;
-  std::cout << "P = " << uncertainty << std::endl;
 
   return prediction;
 }

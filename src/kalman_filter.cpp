@@ -22,7 +22,7 @@ void KalmanFilter::UpdateProcessNoise(const float& time_shift)
 }
 
 KalmanFilter::KalmanFilter()
-  : noise_ax(9), noise_ay(9),
+  : noise_ax(27), noise_ay(27),
   F(MatrixXd(4, 4)),
   Q(MatrixXd(4, 4)), x(VectorXd(4)), P(MatrixXd(4, 4))
 {
@@ -37,6 +37,9 @@ KalmanFilter::KalmanFilter()
     0, 1, 0, 0,
     0, 0, 1000, 0,
     0, 0, 0, 1000;
+
+  long x_size = x.size();
+  I = MatrixXd::Identity(x_size, x_size);
 }
 
 void KalmanFilter::Initialize(float x_coordinate, float y_coordinate)
@@ -44,7 +47,7 @@ void KalmanFilter::Initialize(float x_coordinate, float y_coordinate)
   x << x_coordinate, y_coordinate, 0, 0;
 }
 
-VectorXd KalmanFilter::Predict(const float& time_shift)
+VectorXd KalmanFilter::Predict(const float time_shift)
 {
   UpdateStateTransition(time_shift);
   UpdateProcessNoise(time_shift);
@@ -53,10 +56,12 @@ VectorXd KalmanFilter::Predict(const float& time_shift)
   MatrixXd F_transposed = F.transpose();
   P = F * P * F_transposed + Q;
 
-  return x;
+  VectorXd prediction = VectorXd(4);
+  prediction << x(0), x(1), x(2), x(3);
+  return prediction;
 }
 
-MatrixXd KalmanFilter::Update(const VectorXd& measurement, Sensor& sensor)
+void KalmanFilter::Update(const VectorXd& measurement, Sensor& sensor)
 {
   sensor.Update(x, measurement);
   
@@ -66,9 +71,5 @@ MatrixXd KalmanFilter::Update(const VectorXd& measurement, Sensor& sensor)
   MatrixXd K = P * H_transposed * S_inversed;
   
   x = x + K * sensor.prediction_error;
-  long x_size = x.size();
-  MatrixXd I = MatrixXd::Identity(x_size, x_size);
   P = (I - K * sensor.H) * P;
-  
-  return P;
 }
